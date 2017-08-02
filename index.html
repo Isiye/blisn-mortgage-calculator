@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <meta charset="utf-8">
+  <meta name="viewport" content"width=device-width, initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+</head>
+<body ng-app="mortgageApp">
+  <div class="container">
+    <div class="jumbotron" ng-controller="headerCtrl">
+      <h1>{{header}}</h1>
+            <span>by:</span><a href="#" target="_blank"> {{mySite}}</a>
+      <br>
+      <br>
+      <hr>
+      <br>
+      <!--MainCtrl-->
+      <form ng-controller="appCtrl">
+        <!-- Loan Amount -->
+        <label for="home-price">Home Price: </label>
+        <input type="text" id="home-price" ng-change="findNewHomeAmt()" ng-model="mortgage.homePrice" class="form-control">
+        <br>
+        <br>
+        <!-- Down Payment -->
+        <label for="loan-amount">Down Payment: </label>
+        <input type="text" id="down-payment" ng-change="findNewHomeAmt()" ng-model="mortgage.downPayment" class="form-control">
+        <br>
+        <br>
+         <!-- Interest Rate -->
+        <label for="interest-rate">Interest Rate (%): </label>
+        <input type="text" id="interest-rate" ng-change="aprMonthly()" ng-model="mortgage.interestRate" class="form-control">
+        <br>
+        <br>
+        <!-- Mortgage Period -->
+        <label for="mortgage-period">Mortgage Period (years): </label>
+        <input type="text" id="mortgage-period" ng-change="numOfPayments()" ng-model="mortgage.mortgagePeriod" class="form-control">
+        <br>
+        <br>
+        <b>Monthly Mortgage Payment:</b>
+        <br>
+        Predicted Payment: {{mortgage.mortagePayment | currency:"USD $ "}}
+        <br>
+        <br>
+        <div class="build-helper">
+          <p>Variable Watch (For Manual Calculation):</p>
+          New Home Amount: {{mortgage.newHomeAmt}}
+          <br>
+          Mortage APR Monthly Rate: {{mortgage.aprMonthlyRate}}
+          <br>
+          Total Number of Payments: {{mortgage.numberOfPayments}}
+          <br>
+          Monthly Interest Per Payments: {{mortgage.interestPayments}}
+          <br>
+          <hr>
+          Total Monthly Mortgage Payment: {{mortgage.monthlyPayment | currency:"Ksh."}}
+        </div>
+        <br>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    var app = angular.module('mortgageApp', []);
+
+app.controller('headerCtrl', function($scope){
+  $scope.header = "Blisn Mortgage Calculator";
+  $scope.mySite = "Billy Isiye";
+});
+
+app.controller('appCtrl',['$scope', function($scope){
+  $scope.mortgage = {
+    homePrice: 100000,
+    downPayment: 0,
+    newHomeAmt: 0,
+    interestRate: 5,
+    aprMonthlyRate: 0,
+    numberOfPayments: 0,
+    interestPayments: 0,
+    mortgagePeriod: 15,
+    monthlyPayment: 0
+  }
+  
+  //subtract down payment from home price
+  var findNewHomeAmt = function(){
+    $scope.mortgage.newHomeAmt = $scope.mortgage.homePrice - $scope.mortgage.downPayment;
+  }
+  $scope.$watch('mortgage.homePrice + mortgage.downPayment',findNewHomeAmt);
+  
+  //Calculate monthly APR Rate
+  var aprMonthly = function(){
+    $scope.mortgage.aprMonthlyRate = (($scope.mortgage.interestRate / 100) / 12);
+  };
+  $scope.$watch('mortgage.interestRate', aprMonthly);
+  
+  //Calculate Total Number of Mortgage Payments
+  var numOfPayments = function(){
+    $scope.mortgage.numberOfPayments = ($scope.mortgage.mortgagePeriod * 12);
+  };
+  $scope.$watch('mortgage.mortgagePeriod', numOfPayments);
+  
+  //Calculate term (1+i)^n or interestPayments^numberOfPayments
+  var interestPayments = function(){
+    $scope.mortgage.interestPayments = Math.pow(1 + $scope.mortgage.aprMonthlyRate, $scope.mortgage.numberOfPayments);
+  };
+  $scope.$watch('mortgage.mortgagePeriod + mortgage.interestRate', interestPayments);
+  
+  //calculate monthly mortgage payment
+  var monthlyPayment = function(){
+    $scope.mortgage.monthlyPayment = ($scope.mortgage.newHomeAmt * ($scope.mortgage.aprMonthlyRate *      $scope.mortgage.interestPayments) / ($scope.mortgage.interestPayments - 1));
+  };
+  $scope.$watch('mortgage.aprMonthlyRate + mortgage.interestPayments + mortgage.downPayment + mortgage.homePrice', monthlyPayment);
+}]);
+  </script>
+</body>
+</html>
